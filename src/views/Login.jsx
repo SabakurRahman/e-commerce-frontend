@@ -10,6 +10,26 @@ function login() {
   const { setUser, setToken } = useStateContext();
   const [errors, setErrors] = useState();
 
+  const postApiData = async (payload) => {
+    try {
+      const response = await axiosClient.post("/login", payload);
+      console.log("Response:", response.data.data);
+      if (response.data.status_code === 460) {
+        setErrors({ server: [response.data.status_message] });
+        return;
+      }
+      if (response.data.status_code === 422) {
+        setErrors(response.data.data);
+        return;
+      }
+
+      setUser(response.data.data.user);
+      setToken(response.data.data.token);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   const onSubmit = (e) => {
     e.preventDefault();
 
@@ -18,18 +38,20 @@ function login() {
       password: password,
     };
 
-    axiosClient
-      .post("/login", payload)
-      .then((response) => {
-        const data = response.data.data;
-        setUser(data.user);
-        setToken(data.token);
-      })
-      .catch((err) => {
-        console.log("Error:", err);
-      });
+    postApiData(payload);
 
-    console.log(payload);
+    // axiosClient
+    //   .post("/login", payload)
+    //   .then((response) => {
+    //     const data = response.data.data;
+    //     setUser(data.user);
+    //     setToken(data.token);
+    //   })
+    //   .catch((err) => {
+    //     console.log("Error:", err);
+    //   });
+
+    // console.log(payload);
   };
 
   return (
@@ -38,11 +60,13 @@ function login() {
         <form onSubmit={onSubmit}>
           <h1 className="title">Login into your account</h1>
 
-          {/* {message &&
-          <div className="alert">
-            <p>{message}</p>
-          </div>
-        } */}
+          {errors && (
+            <div className="alert">
+              {Object.keys(errors).map((key) => (
+                <p key={key}>{errors[key][0]}</p>
+              ))}
+            </div>
+          )}
 
           <input
             value={email}

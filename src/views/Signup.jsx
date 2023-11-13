@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { createRef, useState } from "react";
+import { createRef, useEffect, useState } from "react";
 import axiosClient from "../axios-client.js";
 import { useStateContext } from "../contexts/ContextProvider.jsx";
 
@@ -11,6 +11,21 @@ export default function Signup() {
   const { setUser, setToken } = useStateContext();
   const [errors, setErrors] = useState();
 
+  const postApiData = async (payload) => {
+    try {
+      const response = await axiosClient.post("/registers", payload);
+      console.log("Response:", response.data.errors);
+      if (response.data.errors) {
+        setErrors(response.data.errors);
+        return;
+      }
+      setUser(response.data.data.user);
+      setToken(response.data.data.token);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   const onSubmit = (ev) => {
     ev.preventDefault();
 
@@ -20,23 +35,27 @@ export default function Signup() {
       password: passwordRef.current.value,
       password_confirmation: passwordConfirmationRef.current.value,
     };
-    axiosClient
-      .post("/register", payload)
-      .then((response) => {
-        console.log("Response:", response);
-        console.log("Response Data:", response.data);
-        console.log("Response Data User:", response.data.errors);
 
-        if (response.data.errors) {
-          setErrors(response.data.errors);
-          return;
-        }
-
-        setUser(response.data.data.user);
-        setToken(response.data.data.token);
-      })
-      .catch((err) => {});
+    postApiData(payload);
   };
+
+  //   axiosClient
+  //     .post("/register", payload)
+  //     .then((response) => {
+  //       console.log("Response:", response);
+  //       console.log("Response Data:", response.data);
+  //       console.log("Response Data User:", response.data.errors);
+
+  //       if (response.data.errors) {
+  //         setErrors(response.data.errors);
+  //         return;
+  //       }
+
+  //       setUser(response.data.data.user);
+  //       setToken(response.data.data.token);
+  //     })
+  //     .catch((err) => {});
+  // };
 
   return (
     <div className="login-signup-form animated fadeInDown">
